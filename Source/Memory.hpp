@@ -17,7 +17,7 @@ public:
     template <typename T>
     void WriteChunk(const T& data, Address_t address)
     {
-        std::copy(data.begin(), data.end(), mem.begin() + programmOffset);
+        std::copy(data.begin(), data.end(), mem.begin() + address - programOffset);
     }
 
 private:

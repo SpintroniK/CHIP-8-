@@ -20,11 +20,25 @@ public:
 
     ~Cpu() = default;
 
-    auto GetCls() const { return cls; }
+    template <typename T>
+    void LoadProgram(const T& data)
+    {
+        LoadToMemory(data, programLoadAddress);
+    }
+
     void ResetCls() { cls = false; }
+
+    auto GetCls() const { return cls; }
 
 
 private:
+
+
+    template <typename T>
+    void LoadToMemory(const T& data, Address_t address)
+    {
+        memory.WriteChunk(data, address);
+    }
 
     void ClsRet(Instruction_t instruction)
     {
@@ -41,12 +55,13 @@ private:
 
     void Jp(Instruction_t instruction)
     {
-
+        pc = GetLowest12bitAddr(instruction);
     }
 
     void Call(Instruction_t instruction)
     {
-
+        stack[++sp] = pc;
+        pc = GetLowest12bitAddr(instruction);
     }
 
     void SeByte(Instruction_t instruction)
@@ -117,7 +132,7 @@ private:
     const std::array<InstructionSetPtmf_t, nbInstructionSets> instructionSets
     {
         &Cpu::ClsRet,   // 0x00E0 CLS and 0x00EE RET
-        &Cpu::Jp,       // 0x1
+        &Cpu::Jp,       // 0x1NNN Jump to address NNN
         &Cpu::Call,     // 0x2
         &Cpu::SeByte,   // 0x3
         &Cpu::SneByte,  // 0x4

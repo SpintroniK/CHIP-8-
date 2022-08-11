@@ -1,11 +1,13 @@
 #include "Cpu.hpp"
 #include "KeyPad.hpp"
+#include "Rom.hpp"
 
 #include <SFML/Graphics.hpp>
 
 #include <array>
 #include <chrono>
 #include <iostream>
+#include <numeric>
 #include <vector>
 
 using namespace std::chrono;
@@ -17,6 +19,12 @@ int main(int argc, char** argv)
 
     // Create CPU
     Cpu cpu;
+
+    // Create Rom
+    Rom rom;
+    rom.LoadFromFile("/home/jeremy/Desktop/CHIP-8-Emulator/roms/BRIX");
+
+    cpu.LoadProgram(rom.GetData());
 
     std::vector<std::uint8_t> display(width * height);
     sf::RectangleShape pixel(sf::Vector2f(2, 2));
@@ -60,6 +68,10 @@ int main(int argc, char** argv)
                         return k == event.key.code;
                     });
 
+                    const auto i = std::accumulate(currentKeys.begin(), currentKeys.end(), std::uint16_t{}, [](const auto& acc, const auto& k)
+                    {
+                        return std::rotl(acc, 1) | k;
+                    });
                     
                     break;
                 }
