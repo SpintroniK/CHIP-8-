@@ -12,7 +12,7 @@
 
 using namespace std::chrono;
 
-int main(int argc, char** argv)
+int main() //(int argc, char** argv)
 {
     constexpr auto width = 640U;
     constexpr auto height = 480U;
@@ -26,7 +26,7 @@ int main(int argc, char** argv)
 
     cpu.LoadProgram(rom.GetData());
 
-    std::vector<std::uint8_t> display(width * height);
+    std::array<std::uint8_t, width * height> display;
     sf::RectangleShape pixel(sf::Vector2f(2, 2));
     pixel.setFillColor(sf::Color(0xf8, 0x67, 0x0e));
 
@@ -98,11 +98,11 @@ int main(int argc, char** argv)
             for(std::size_t j = 0; j < 128; j++) {
                 // if(display.at(j + i * 128) == 1) 
                 {
-                    std::uint8_t r = 255;
-                    std::uint8_t g = 255;
-                    std::uint8_t b = 255;
+                    const std::uint8_t r = 255;
+                    const std::uint8_t g = 255;
+                    const std::uint8_t b = 255;
                     pixel.setFillColor(sf::Color(r, g, b));
-                    pixel.setPosition(2 * j, 2 * i);
+                    pixel.setPosition(static_cast<float>(2 * j), static_cast<float>(2 * i));
                     window.draw(pixel);
                 }
             }

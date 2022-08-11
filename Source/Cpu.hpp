@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Defintions.hpp"
+#include "Helpers.hpp"
 #include "Instructions.hpp"
 #include "Memory.hpp"
 

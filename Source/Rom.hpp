@@ -37,6 +37,6 @@ public:
 
 private:
 
-    std::array<Byte_t, ramSize> data{};
+    std::array<Byte_t, ramSize - programLoadAddress> data{};
 
 };
