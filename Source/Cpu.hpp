@@ -6,6 +6,8 @@
 #include "Memory.hpp"
 
 #include <array>
+#include <bit>
+#include <functional>
 #include <iostream>
 
 
@@ -20,6 +22,12 @@ public:
     }
 
     ~Cpu() = default;
+
+    void ExecuteInstruction(Instruction_t instruction)
+    {
+        const Byte_t instructionCode = GetNibble<0>(instruction);
+        std::invoke(instructionSets[instructionCode], this, instruction);
+    }
 
     template <typename T>
     void LoadProgram(const T& data)
@@ -67,27 +75,45 @@ private:
 
     void SeByte(Instruction_t instruction)
     {
+        const auto x = GetNibble<1>(instruction);
 
+        if(V[x] == GetLowestByte(instruction))
+        {
+            pc += 2;
+        }
     }
 
     void SneByte(Instruction_t instruction)
     {
+        const auto x = GetNibble<1>(instruction);
 
+        if(V[x] != GetLowestByte(instruction))
+        {
+            pc += 2;
+        }
     }
 
     void SeReg(Instruction_t instruction)
     {
+        const auto x = GetNibble<1>(instruction);
+        const auto y = GetNibble<2>(instruction);
 
+        if(V[x] == V[y])
+        {
+            pc += 2;
+        }
     }
 
     void Ld(Instruction_t instruction)
     {
-
+        const auto x = GetNibble<1>(instruction);
+        V[x] = GetLowestByte(instruction);
     }
 
     void Add(Instruction_t instruction)
     {
-
+        const auto x = GetNibble<1>(instruction);
+        V[x] += GetLowestByte(instruction);
     }
 
     void Op(Instruction_t instruction)
