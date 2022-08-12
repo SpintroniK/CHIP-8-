@@ -1,4 +1,4 @@
-#include "Cpu.hpp"
+#include "Chip8.hpp"
 #include "KeyPad.hpp"
 #include "Rom.hpp"
 
@@ -8,32 +8,42 @@
 #include <chrono>
 #include <iostream>
 #include <numeric>
+#include <string>
 #include <vector>
 
 using namespace std::chrono;
 
-int main() //(int argc, char** argv)
+int main(int argc, char** argv)
 {
-    constexpr auto width = 640U;
-    constexpr auto height = 480U;
 
-    // Create CPU
-    Cpu cpu;
+    const std::vector<std::string> args(argv, argv + argc);
+
+    if(args.size() < 2)
+    {
+        return EXIT_SUCCESS;
+    }
+
+    constexpr auto scale = 8;
+    constexpr auto width = 64U * scale;
+    constexpr auto height = 32U * scale;
 
     // Create Rom
     Rom rom;
-    rom.LoadFromFile("/home/jeremy/Desktop/CHIP-8-Emulator/roms/BRIX");
+    rom.LoadFromFile(args[1]);
 
-    cpu.LoadProgram(rom.GetData());
+    Chip8 chip8;
+    chip8.LoadRom(rom);
+
+    chip8.Start();
 
     std::array<std::uint8_t, width * height> display;
-    sf::RectangleShape pixel(sf::Vector2f(2, 2));
+    sf::RectangleShape pixel(sf::Vector2f(scale / 2, scale / 2));
     pixel.setFillColor(sf::Color(0xf8, 0x67, 0x0e));
 
 
 
     sf::RenderWindow window{sf::VideoMode{width, height}, "CHIP-8-"};
-    // window.setFramerateLimit(60);
+    window.setFramerateLimit(60);
 
 
     while(window.isOpen())
@@ -94,15 +104,20 @@ int main() //(int argc, char** argv)
     
         window.clear();
 
-        for(std::size_t i = 0; i < 64; i++) {
-            for(std::size_t j = 0; j < 128; j++) {
-                // if(display.at(j + i * 128) == 1) 
+        // Get screen data
+        const auto pixels = chip8.GetScreen().GetPixels();
+
+        for(std::size_t i = 0; i < 32; i++) 
+        {
+            for(int j = 0; j < 64; j++) 
+            {
+                if(pixels[i] & std::rotr(static_cast<std::uint64_t>(0x8000000000000000), j))
                 {
                     const std::uint8_t r = 255;
                     const std::uint8_t g = 255;
                     const std::uint8_t b = 255;
                     pixel.setFillColor(sf::Color(r, g, b));
-                    pixel.setPosition(static_cast<float>(2 * j), static_cast<float>(2 * i));
+                    pixel.setPosition(static_cast<float>(scale * j), static_cast<float>(scale * i));
                     window.draw(pixel);
                 }
             }
@@ -113,6 +128,8 @@ int main() //(int argc, char** argv)
         const auto delta = high_resolution_clock::now() - start;
         // std::cout << microseconds::period::den / duration_cast<microseconds>(delta).count() << " fps" << std::endl;
     }
+
+    chip8.Stop();
 
     return EXIT_SUCCESS;
 }

@@ -1,14 +1,18 @@
 #pragma once
 
 #include "Defintions.hpp"
+#include "Display.hpp"
 #include "Helpers.hpp"
 #include "Instructions.hpp"
 #include "Memory.hpp"
 
 #include <array>
 #include <bit>
+#include <climits>
 #include <functional>
 #include <iostream>
+#include <limits>
+#include <random>
 
 
 class Cpu
@@ -29,15 +33,20 @@ public:
         std::invoke(instructionSets[instructionCode], this, instruction);
     }
 
+    void Step()
+    {
+        const auto instruction = memory.Read<Instruction_t>(pc);
+        pc += sizeof(Instruction_t);
+        ExecuteInstruction(instruction);
+    }
+
     template <typename T>
     void LoadProgram(const T& data)
     {
         LoadToMemory(data, programLoadAddress);
     }
 
-    void ResetCls() { cls = false; }
-
-    auto GetCls() const { return cls; }
+    auto GetScreen() const { return screen; }
 
 
 private:
@@ -53,7 +62,7 @@ private:
     {
         if(instruction == OpCode::Cls)
         {
-            cls = true;         // Clear screen
+            screen.Clear();
         }
 
         if(instruction == OpCode::Ret)
@@ -118,37 +127,103 @@ private:
 
     void Op(Instruction_t instruction)
     {
+        const auto x = GetNibble<1>(instruction);
+        const auto y = GetNibble<2>(instruction);
+        const auto n = GetNibble<3>(instruction);
 
+        switch(n)
+        {
+            case 0: V[x] = V[y]; break; // Stores the value of register Vy in register Vx.
+            case 1: V[x] = V[x] | V[y]; break; // OR
+            case 2: V[x] = V[x] & V[y]; break; // AND
+            case 3: V[x] = V[x] ^ V[y]; break; // XOR
+            case 4: 
+            {
+                const auto s = V[x] + V[y];
+                (s > std::numeric_limits<Byte_t>::max()) ? V[0xF] = 1 : V[0xF] = 0; 
+                V[x] = static_cast<Byte_t>(s & 0xFF);
+                break;
+            } 
+            case 5:
+            {
+                V[0xF] = V[x] > V[y] ? 1U : 0U;
+                V[x] = V[x] - V[y];
+                break;
+            }
+            case 6:
+            {
+                V[0xF] = (V[x] & 0x01) ? 1 : 0;
+                V[x] = V[x] >> 1;
+                break;
+            } 
+            case 7:
+            {
+                V[0xF] = (V[y] > V[x]) ? 1 : 0;
+                V[x] = V[y] - V[x];
+                break;
+            }
+            case 0xe:
+            {
+                V[0xF] = (V[x] & 0x80) ? 1 : 0;
+                V[x] = V[x] << 1;
+                break;
+            }
+            default: break;
+        }
     }
 
     void SneReg(Instruction_t instruction)
     {
+        const auto x = GetNibble<1>(instruction);
+        const auto y = GetNibble<2>(instruction);
 
+        if(V[x] != V[y])
+        {
+            pc += 2;
+        }
     }
 
     void SetI(Instruction_t instruction)
     {
-
+        I = GetLowest12bitAddr(instruction);
     }
 
     void JpV0(Instruction_t instruction)
     {
-
+        const auto addr = GetLowest12bitAddr(instruction);
+        pc = V[0] + addr;
     }
 
     void Rnd(Instruction_t instruction)
     {
+        using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, CHAR_BIT, Byte_t>;
+        random_bytes_engine r{};
 
+        const auto x = GetNibble<1>(instruction);
+        V[x] = r() & GetLowestByte(instruction);
     }
 
     void Drw(Instruction_t instruction)
     {
+        const auto x = GetNibble<1>(instruction);
+        const auto y = GetNibble<2>(instruction);
 
+        const auto xSprite = V[x];
+        const auto ySprite = V[y];
+
+        const auto spriteAddress = I;
+        const auto spriteLength = GetNibble<3>(instruction);
+
+        const auto spriteData = memory.ReadChunk(spriteAddress, spriteLength);
+        
+        const Sprite sprite{xSprite, ySprite, spriteData};
+
+        screen.DrawSprite(sprite);
     }
 
     void Skips(Instruction_t instruction)
     {
-
+        
     }
 
     void Fxx(Instruction_t instruction)
@@ -196,11 +271,13 @@ private:
         0xF0, 0x80, 0xF0, 0x80, 0xF0, //E
         0xF0, 0x80, 0xF0, 0x80, 0x80  //F
     };
-    
+
     Memory<ramSize> memory;
+    Screen screen;
     std::array<Address_t, stackSize> stack{};
     std::array<Register_t, nbRegisters> V{};
-    Address_t pc{};
+    Address_t I;
+    Address_t pc{programLoadAddress};
     Byte_t sp{};
     bool cls{false};
 };

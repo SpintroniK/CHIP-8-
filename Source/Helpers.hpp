@@ -17,7 +17,7 @@ inline constexpr Byte_t GetLowestByte(Address_t address)
 
 inline constexpr Byte_t GetLowestNibble(Address_t address)
 {
-    return address & Address_t{0x0F};
+    return static_cast<Byte_t>(address & Address_t{0x0F});
 }
 
 template <std::uint8_t N>
