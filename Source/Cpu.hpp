@@ -6,14 +6,17 @@
 #include "Instructions.hpp"
 #include "KeyPad.hpp"
 #include "Memory.hpp"
+#include "Timer.hpp"
 
 #include <array>
 #include <bit>
+#include <chrono>
 #include <functional>
 #include <iostream>
 #include <limits>
 #include <mutex>
 #include <random>
+#include <thread>
 
 
 class Cpu
@@ -24,9 +27,16 @@ public:
     Cpu()
     {
         memory.WriteChunk(fontSet, fontOffset);
+
+        // Start timers
+        timersTask = std::jthread(&Cpu::TimersLoop, this);
     }
 
-    ~Cpu() = default;
+    ~Cpu()
+    {
+        timersTask.request_stop();
+        timersTask.join();
+    }
 
     void ExecuteInstruction(Instruction_t instruction)
     {
@@ -61,6 +71,27 @@ public:
 
 
 private:
+
+    void TimersLoop(std::stop_token stopToken)
+    {
+        using namespace std::chrono;
+        using namespace std::this_thread;
+
+        for(;;)
+        {
+            const auto dt = double{nanoseconds::period::den} / 60.;
+            sleep_for(nanoseconds{static_cast<std::uint64_t>(dt)});
+
+            delayTimer.Dec();
+            // std::cout << +delayTimer.Count() << std::endl;
+
+            if(stopToken.stop_requested())
+            {
+                return;
+            }
+        }
+
+    }
 
     auto GetKeys() const
     {
@@ -213,8 +244,12 @@ private:
 
     void Rnd(Instruction_t instruction)
     {
-        using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, std::numeric_limits<Byte_t>::digits, Byte_t>;
+        using random_bytes_engine = std::independent_bits_engine<std::mt19937, std::numeric_limits<Byte_t>::digits, Byte_t>;
         random_bytes_engine r{};
+
+        using namespace std::chrono;
+        const auto ts = high_resolution_clock::now().time_since_epoch();
+        r.seed(static_cast<Byte_t>(duration_cast<microseconds>(ts).count() % 255));
 
         const auto x = GetNibble<1>(instruction);
         V[x] = r() & GetLowestByte(instruction);
@@ -264,7 +299,47 @@ private:
 
     void Fxx(Instruction_t instruction)
     {
+        const auto x = GetNibble<1>(instruction);
 
+        switch(GetLowestByte(instruction))
+        {
+            case 0x07: V[x] = delayTimer.Count(); break;
+            case 0x0A:
+            {
+                const auto k = GetKeys();
+                const auto it = std::find(k.begin(), k.end(), true);
+
+                if(it == k.cend())
+                {
+                    pc -= 2;
+                    return;
+                }
+
+                V[x] = static_cast<Byte_t>(std::distance(k.cbegin(), it));
+                std::cout << +V[x] << std::endl;
+
+                break;
+            }
+            case 0x15: delayTimer.Set(V[x]); break;
+            case 0x18: soundTimer.Set(V[x]); break;
+            case 0x1E: I += V[x]; break;
+            case 0x29: I = V[x] * Address_t{5}; break;
+            case 0x33: 
+            {
+                memory.WriteByte(V[x] / 100, I);
+                memory.WriteByte((V[x] / 10) % 10, I + 1);
+                memory.WriteByte((V[x] % 100) % 10, I + 2);
+                break;
+            }
+            case 0x55: memory.WriteChunk(std::vector(V.begin(), V.begin() + x), I); break;
+            case 0x65:
+            {
+                const auto bytes = memory.ReadChunk(I, x + 1);
+                std::copy(bytes.begin(), bytes.end(), V.begin());
+                break;
+            }
+            default: break;
+        }
     }
 
     const std::array<InstructionSetPtmf_t, nbInstructionSets> instructionSets
@@ -308,16 +383,21 @@ private:
         0xF0, 0x80, 0xF0, 0x80, 0x80  //F
     };
 
-    Memory<ramSize> memory;
     Screen screen;
     KeyArray keys{};
+    Timer<Byte_t> delayTimer;
+    Timer<Byte_t> soundTimer;
     std::array<Address_t, stackSize> stack{};
     std::array<Register_t, nbRegisters> V{};
+    Memory<ramSize> memory;
     Address_t I;
     Address_t pc{programLoadAddress};
     Byte_t sp{};
     bool cls{false};
 
+    std::jthread timersTask;
+
     mutable std::mutex keysMutex;
     mutable std::mutex screenMutex;
+
 };

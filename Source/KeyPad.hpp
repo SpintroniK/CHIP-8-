@@ -14,7 +14,7 @@ struct KeyPad
         sf::Keyboard::Num1,
         sf::Keyboard::Num2,
         sf::Keyboard::Num3,
-        sf::Keyboard::Num4,
+        sf::Keyboard::Quote,
         sf::Keyboard::A,
         sf::Keyboard::Z,
         sf::Keyboard::E,

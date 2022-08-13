@@ -31,6 +31,11 @@ public:
         return d;
     }
 
+    void WriteByte(Byte_t byte, Address_t address)
+    {
+        mem[address] = byte;
+    }
+
     template <typename T>
     T Read(Address_t address)
     {
