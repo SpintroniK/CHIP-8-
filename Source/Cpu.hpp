@@ -126,7 +126,7 @@ private:
 
     void Call(Instruction_t instruction)
     {
-        stack[++sp] = pc;
+        stack[sp++] = pc;
         pc = GetLowest12bitAddr(instruction);
     }
 
@@ -316,7 +316,6 @@ private:
                 }
 
                 V[x] = static_cast<Byte_t>(std::distance(k.cbegin(), it));
-                std::cout << +V[x] << std::endl;
 
                 break;
             }
@@ -331,7 +330,7 @@ private:
                 memory.WriteByte((V[x] % 100) % 10, I + 2);
                 break;
             }
-            case 0x55: memory.WriteChunk(std::vector(V.begin(), V.begin() + x), I); break;
+            case 0x55: memory.WriteChunk(std::vector(V.begin(), V.begin() + x + 1), I); break;
             case 0x65:
             {
                 const auto bytes = memory.ReadChunk(I, x + 1);

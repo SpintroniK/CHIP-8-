@@ -58,7 +58,7 @@ private:
         while(isRunning)
         {
             cpu.Step();
-            sleep_for(2857us);  // ~350 instructions / second
+            sleep_for(1429us);  // ~700 instructions / second
         }
     }
 

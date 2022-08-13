@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 
     while(window.isOpen())
     {
-        const auto start = high_resolution_clock::now();
+        // const auto start = high_resolution_clock::now();
 
         sf::Event event;
 
@@ -127,7 +127,7 @@ int main(int argc, char** argv)
 
         window.display();
 
-        const auto delta = high_resolution_clock::now() - start;
+        // const auto delta = high_resolution_clock::now() - start;
         // std::cout << microseconds::period::den / duration_cast<microseconds>(delta).count() << " fps" << std::endl;
     }
 
