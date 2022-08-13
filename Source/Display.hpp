@@ -79,7 +79,7 @@ public:
             const auto spriteLine = std::bitset<screenWidth>{data[i % screenHeight - y]};
             const auto prevScreenLine = screenline;
 
-            screenline ^= rotl(spriteLine, screenWidth - 1 - spriteWidth - x);
+            screenline ^= rotl(spriteLine, screenWidth - spriteWidth - x);
 
             collision |= (prevScreenLine & ~screenline).any();
         }
