@@ -37,8 +37,7 @@ int main(int argc, char** argv)
     chip8.Start();
 
     sf::RectangleShape pixel(sf::Vector2f(scale - 2, scale - 2));
-    pixel.setFillColor(sf::Color(0xf8, 0x67, 0x0e));
-
+    pixel.setFillColor(sf::Color(0xff, 0xff, 0xff));
 
 
     sf::RenderWindow window{sf::VideoMode{width, height}, "CHIP-8-"};
@@ -115,10 +114,6 @@ int main(int argc, char** argv)
             {
                 if(pixels[i][screenWidth - 1 - j])
                 {
-                    const std::uint8_t r = 255;
-                    const std::uint8_t g = 255;
-                    const std::uint8_t b = 255;
-                    pixel.setFillColor(sf::Color(r, g, b));
                     pixel.setPosition(static_cast<float>(scale * j), static_cast<float>(scale * i));
                     window.draw(pixel);
                 }

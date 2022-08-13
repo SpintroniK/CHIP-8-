@@ -14,6 +14,7 @@ class Chip8
 {
 
 public:
+
     Chip8() = default;
     ~Chip8() = default;
 
@@ -24,13 +25,13 @@ public:
 
     void Start()
     {
-        isRunning.store(true);
-        mainTask = std::thread(&Chip8::Loop, this);
+        mainTask = std::jthread(&Chip8::Loop, this);
     }
 
     void Stop()
     {
-        isRunning.store(false);
+        mainTask.request_stop();
+
         if(mainTask.joinable())
         {
             mainTask.join();
@@ -50,21 +51,23 @@ public:
 
 private:
 
-    void Loop()
+    void Loop(std::stop_token stopToken)
     {
         using namespace std::chrono_literals;
         using namespace std::this_thread;
 
-        while(isRunning)
+        for(;;)
         {
             cpu.Step();
             sleep_for(1429us);  // ~700 instructions / second
+
+            if(stopToken.stop_requested())
+            {
+                return;
+            }
         }
     }
 
     Cpu cpu;
-
-    std::thread mainTask;
-    std::atomic<bool> isRunning{false};
-
+    std::jthread mainTask;
 };
