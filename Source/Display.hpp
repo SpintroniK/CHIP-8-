@@ -2,12 +2,10 @@
 
 #include "Defintions.hpp"
 
-#include <algorithm>
 #include <array>
-#include <bit>
 #include <bitset>
-#include <climits>
 #include <iostream>
+#include <limits>
 #include <vector>
 
 class Sprite
@@ -42,8 +40,8 @@ class Screen
 public:
     Screen()
     { 
-        pixels.resize(screenHeight); 
-        std::fill(pixels.begin(), pixels.end(), Byte_t{});
+        // pixels.resize(screenHeight); 
+        std::fill(pixels.begin(), pixels.end(), std::bitset<screenWidth>{});
     };
 
     Screen(const Screen& other)
@@ -57,23 +55,36 @@ public:
 
     void Clear()
     {
-        //std::fill(pixels.begin(), pixels.end(), std::bitset<screenWidth>{});
+        std::fill(pixels.begin(), pixels.end(), std::bitset<screenWidth>{});
     }
 
-    bool DrawSprite(const Sprite& s)
+    bool DrawSprite(const Sprite& sp)
     {
-        const Byte_t y = s.GetY();
-        const Byte_t x = s.GetX();
-        const auto data = s.GetData();
+        const Byte_t y = sp.GetY() % screenHeight;
+        const Byte_t x = sp.GetX();
+        const auto data = sp.GetData();
+        const auto spriteHeight = data.size();
 
-        std::cout << "Draw sprite (" << +x << ", " << +y << ")" << std::endl;
+        // std::cout << "Draw sprite (" << +x << ", " << +y << ")" << std::endl;
 
-        for(auto lineNb = y;lineNb < y + data.size(); ++lineNb)
+        // Same as std::rotl, but for std::bitset
+        const auto rotl = []<std::size_t N>(const std::bitset<N>& x_, std::size_t s) { const auto r = s % N; return (x_ << r) | (x_ >> (N - r)); };
+
+        bool collision = false;
+
+        for(auto i = y; i < y + spriteHeight; ++i)
         {
-            pixels[lineNb] ^= std::rotl(static_cast<std::uint64_t>(data[lineNb - y]), 55 - x);
+            auto& screenline = pixels[i % screenHeight];
+
+            const auto spriteLine = std::bitset<screenWidth>{data[i % screenHeight - y]};
+            const auto prevScreenLine = screenline;
+
+            screenline ^= rotl(spriteLine, screenWidth - 1 - spriteWidth - x);
+
+            collision |= (prevScreenLine & ~screenline).any();
         }
 
-        return false;
+        return collision;
     }
 
     auto GetPixels() const
@@ -83,5 +94,5 @@ public:
 
 private:
 
-    std::vector<std::uint64_t> pixels; // pixels[y][x]
+    std::array<std::bitset<screenWidth>, screenHeight> pixels; // pixels[y][x]
 };

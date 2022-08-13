@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <limits>
 
 using Byte_t = std::uint8_t;
 using Address_t = std::uint16_t;
@@ -34,4 +35,5 @@ static constexpr Address_t fontOffset = 0;
 // Display
 static constexpr Byte_t screenWidth = 64;
 static constexpr Byte_t screenHeight = 32;
+static constexpr Byte_t spriteWidth = std::numeric_limits<Byte_t>::digits;
 

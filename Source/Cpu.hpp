@@ -8,7 +8,6 @@
 
 #include <array>
 #include <bit>
-#include <climits>
 #include <functional>
 #include <iostream>
 #include <limits>
@@ -196,7 +195,7 @@ private:
 
     void Rnd(Instruction_t instruction)
     {
-        using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, CHAR_BIT, Byte_t>;
+        using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, std::numeric_limits<Byte_t>::digits, Byte_t>;
         random_bytes_engine r{};
 
         const auto x = GetNibble<1>(instruction);
@@ -218,7 +217,7 @@ private:
         
         const Sprite sprite{xSprite, ySprite, spriteData};
 
-        screen.DrawSprite(sprite);
+        V[0xF] = screen.DrawSprite(sprite);
     }
 
     void Skips(Instruction_t instruction)

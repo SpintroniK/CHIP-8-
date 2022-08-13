@@ -36,8 +36,7 @@ int main(int argc, char** argv)
 
     chip8.Start();
 
-    std::array<std::uint8_t, width * height> display;
-    sf::RectangleShape pixel(sf::Vector2f(scale / 2, scale / 2));
+    sf::RectangleShape pixel(sf::Vector2f(scale - 2, scale - 2));
     pixel.setFillColor(sf::Color(0xf8, 0x67, 0x0e));
 
 
@@ -107,11 +106,11 @@ int main(int argc, char** argv)
         // Get screen data
         const auto pixels = chip8.GetScreen().GetPixels();
 
-        for(std::size_t i = 0; i < 32; i++) 
+        for(std::size_t i = 0; i < screenHeight; i++) 
         {
-            for(int j = 0; j < 64; j++) 
+            for(std::size_t j = 0; j < screenWidth; j++) 
             {
-                if(pixels[i] & std::rotr(static_cast<std::uint64_t>(0x8000000000000000), j))
+                if(pixels[i][screenWidth - 1 - j])
                 {
                     const std::uint8_t r = 255;
                     const std::uint8_t g = 255;
