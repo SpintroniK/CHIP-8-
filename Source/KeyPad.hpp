@@ -30,3 +30,5 @@ struct KeyPad
     };
     
 };
+
+using KeyArray = std::array<bool, KeyPad::keys.size()>;

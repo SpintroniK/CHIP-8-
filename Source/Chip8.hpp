@@ -1,9 +1,10 @@
 #pragma once
 
 #include "Cpu.hpp"
-#include "Display.hpp"
+#include "KeyPad.hpp"
 #include "Rom.hpp"
 
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <thread>
@@ -36,12 +37,16 @@ public:
         }
     }
 
+    auto SetKeys(const KeyArray& k)
+    {
+        cpu.SetKeys(k);
+    }
+
     auto GetScreen() const
     {
-        std::lock_guard<std::mutex> lock(screenMutex);
-        // screen = 
         return cpu.GetScreen();
     }
+    
 
 private:
 
@@ -58,9 +63,7 @@ private:
     }
 
     Cpu cpu;
-    Screen screen;
 
-    mutable std::mutex screenMutex;
     std::thread mainTask;
     std::atomic<bool> isRunning{false};
 

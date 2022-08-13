@@ -54,7 +54,7 @@ int main(int argc, char** argv)
         while(window.pollEvent(event))
         {
 
-            std::array<bool, KeyPad::keys.size()> currentKeys{};
+            KeyArray currentKeys{};
 
             switch(event.type)
             {
@@ -77,11 +77,13 @@ int main(int argc, char** argv)
                         return k == event.key.code;
                     });
 
-                    const auto i = std::accumulate(currentKeys.begin(), currentKeys.end(), std::uint16_t{}, [](const auto& acc, const auto& k)
-                    {
-                        return std::rotl(acc, 1) | k;
-                    });
-                    
+                    // const auto i = std::accumulate(currentKeys.begin(), currentKeys.end(), std::uint16_t{}, [](const auto& acc, const auto& k)
+                    // {
+                    //     return std::rotl(acc, 1) | k;
+                    // });
+
+                    chip8.SetKeys(currentKeys);
+
                     break;
                 }
 
@@ -92,6 +94,7 @@ int main(int argc, char** argv)
                         return ck & !(event.key.code == k);
                     });
 
+                    chip8.SetKeys(currentKeys);
 
                     break;
                 }

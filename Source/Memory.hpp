@@ -4,8 +4,10 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cstddef>
 #include <iostream>
+#include <limits>
 #include <numeric>
 
 template <Address_t Size>
@@ -34,7 +36,7 @@ public:
     {
         return std::accumulate(mem.begin() + address, mem.begin() + address + sizeof(T), T{}, [](const auto& acc, const auto& x)
         {
-            return (acc << 8) | x;
+            return std::rotl(acc, std::numeric_limits<Byte_t>::digits) | x;
         });
     }
 

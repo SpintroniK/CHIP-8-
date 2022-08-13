@@ -4,6 +4,7 @@
 #include "Display.hpp"
 #include "Helpers.hpp"
 #include "Instructions.hpp"
+#include "KeyPad.hpp"
 #include "Memory.hpp"
 
 #include <array>
@@ -11,6 +12,7 @@
 #include <functional>
 #include <iostream>
 #include <limits>
+#include <mutex>
 #include <random>
 
 
@@ -45,11 +47,26 @@ public:
         LoadToMemory(data, programLoadAddress);
     }
 
-    auto GetScreen() const { return screen; }
+    void SetKeys(const KeyArray& k)
+    {
+        std::lock_guard<std::mutex> lock(keysMutex);
+        keys = k;
+    }
+
+    auto GetScreen() const 
+    {
+        std::lock_guard<std::mutex> lock(screenMutex);
+        return screen;
+    }
 
 
 private:
 
+    auto GetKeys() const
+    {
+        std::lock_guard<std::mutex> lock(keysMutex);
+        return keys;
+    }
 
     template <typename T>
     void LoadToMemory(const T& data, Address_t address)
@@ -61,6 +78,7 @@ private:
     {
         if(instruction == OpCode::Cls)
         {
+            std::lock_guard<std::mutex> lock(screenMutex);
             screen.Clear();
         }
 
@@ -217,12 +235,31 @@ private:
         
         const Sprite sprite{xSprite, ySprite, spriteData};
 
+        std::lock_guard<std::mutex> lock(screenMutex);
         V[0xF] = screen.DrawSprite(sprite);
     }
 
     void Skips(Instruction_t instruction)
     {
-        
+        const auto x = GetNibble<1>(instruction);
+        const auto kk = GetLowestByte(instruction);
+        const auto isPressed = GetKeys()[V[x]];
+
+        if(kk == 0x9E)
+        {
+            if(isPressed)
+            {
+                pc += 2;
+            }
+        }
+
+        if(kk == 0xA1)
+        {
+            if(!isPressed)
+            {
+                pc += 2;
+            }
+        }
     }
 
     void Fxx(Instruction_t instruction)
@@ -273,10 +310,14 @@ private:
 
     Memory<ramSize> memory;
     Screen screen;
+    KeyArray keys{};
     std::array<Address_t, stackSize> stack{};
     std::array<Register_t, nbRegisters> V{};
     Address_t I;
     Address_t pc{programLoadAddress};
     Byte_t sp{};
     bool cls{false};
+
+    mutable std::mutex keysMutex;
+    mutable std::mutex screenMutex;
 };

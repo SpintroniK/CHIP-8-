@@ -36,4 +36,3 @@ static constexpr Address_t fontOffset = 0;
 static constexpr Byte_t screenWidth = 64;
 static constexpr Byte_t screenHeight = 32;
 static constexpr Byte_t spriteWidth = std::numeric_limits<Byte_t>::digits;
-
