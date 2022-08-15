@@ -47,6 +47,11 @@ public:
     {
         return cpu.GetScreen();
     }
+
+    auto GetPlaySound() const
+    {
+        return cpu.GetSoundTimer() > 0;
+    }
     
 
 private:

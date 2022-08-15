@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 find_package(Threads REQUIRED)
-find_package(SFML 2.5 COMPONENTS system window graphics audio REQUIRED)
+find_package(SFML COMPONENTS system window graphics audio REQUIRED)
 
 add_executable(chip8pp Source/main.cpp)
 
@@ -33,5 +33,4 @@ target_compile_options(
     -pedantic
 )
 
-
-target_link_libraries(chip8pp Threads::Threads sfml-graphics)
+target_link_libraries(chip8pp Threads::Threads sfml-graphics sfml-audio)

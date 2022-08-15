@@ -69,6 +69,10 @@ public:
         return screen;
     }
 
+    auto GetSoundTimer() const
+    {
+        return soundTimer.Count();
+    }
 
 private:
 
@@ -83,6 +87,7 @@ private:
             sleep_for(nanoseconds{static_cast<std::uint64_t>(dt)});
 
             delayTimer.Dec();
+            soundTimer.Dec();
             // std::cout << +delayTimer.Count() << std::endl;
 
             if(stopToken.stop_requested())
@@ -330,11 +335,17 @@ private:
                 memory.WriteByte((V[x] % 100) % 10, I + 2);
                 break;
             }
-            case 0x55: memory.WriteChunk(std::vector(V.begin(), V.begin() + x + 1), I); break;
+            case 0x55:
+            {
+                memory.WriteChunk(std::vector(V.begin(), V.begin() + x + 1), I);
+                I += static_cast<Address_t>(x + 1);
+                break;
+            }
             case 0x65:
             {
                 const auto bytes = memory.ReadChunk(I, x + 1);
                 std::copy(bytes.begin(), bytes.end(), V.begin());
+                I += static_cast<Address_t>(x + 1);
                 break;
             }
             default: break;

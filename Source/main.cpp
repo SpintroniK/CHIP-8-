@@ -1,8 +1,10 @@
 #include "Chip8.hpp"
 #include "KeyPad.hpp"
 #include "Rom.hpp"
+#include "Sound.hpp"
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 #include <array>
 #include <chrono>
@@ -23,7 +25,7 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
-    constexpr auto scale = 8;
+    constexpr auto scale = 16;
     constexpr auto width = 64U * scale;
     constexpr auto height = 32U * scale;
 
@@ -36,13 +38,28 @@ int main(int argc, char** argv)
 
     chip8.Start();
 
-    sf::RectangleShape pixel(sf::Vector2f(scale - 2, scale - 2));
+    sf::RectangleShape pixel(sf::Vector2f(scale, scale));
     pixel.setFillColor(sf::Color(0xff, 0xff, 0xff));
 
 
     sf::RenderWindow window{sf::VideoMode{width, height}, "CHIP-8-"};
     window.setFramerateLimit(60);
 
+    constexpr auto sampleRate = 44'100;
+    constexpr auto noteFreq = 440;
+    const auto beep = Sound::GenerateSound<std::int16_t>(noteFreq, sampleRate);
+
+    sf::SoundBuffer soundBuffer;
+    if(!soundBuffer.loadFromSamples(beep.data(), sampleRate, 1, sampleRate)) 
+    {
+        return EXIT_FAILURE;
+    }
+
+    sf::Sound sound;
+    sound.setBuffer(soundBuffer);
+    sound.setLoop(true);
+
+    bool isSoundPlaying = false;
 
     while(window.isOpen())
     {
@@ -76,11 +93,6 @@ int main(int argc, char** argv)
                         return k == event.key.code;
                     });
 
-                    // const auto i = std::accumulate(currentKeys.begin(), currentKeys.end(), std::uint16_t{}, [](const auto& acc, const auto& k)
-                    // {
-                    //     return std::rotl(acc, 1) | k;
-                    // });
-
                     chip8.SetKeys(currentKeys);
 
                     break;
@@ -101,6 +113,18 @@ int main(int argc, char** argv)
                 default: break;
             }
 
+        }
+
+        if(!isSoundPlaying && chip8.GetPlaySound())
+        {
+            sound.play();
+            isSoundPlaying = true;
+        }
+
+        if(isSoundPlaying && !chip8.GetPlaySound())
+        {
+            sound.stop();
+            isSoundPlaying = false;
         }
     
         window.clear();

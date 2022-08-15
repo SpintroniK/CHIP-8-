@@ -2,6 +2,7 @@
 
 #include "Defintions.hpp"
 
+// TODO: add missing opcodes
 struct OpCode
 {
     static constexpr Address_t Cls = 0x00E0;
