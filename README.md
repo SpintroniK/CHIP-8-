@@ -84,6 +84,7 @@ Make sure to re-compile the program after you've edited the file.
 
 ## ToDo
 
+- Fix bugs, especially FX instructions.
 - Base timing on Cosmac VIP instructions execution time (see [Chip 8 Instruction Scheduling and Frequency](https://jackson-s.me/2019/07/13/Chip-8-Instruction-Scheduling-and-Frequency.html)).
 - Configurable keypad.
 
@@ -92,7 +93,6 @@ Make sure to re-compile the program after you've edited the file.
 [Mastering CHIP‐8](https://github.com/mattmikolay/chip-8/wiki/Mastering-CHIP%E2%80%908)
 
 [Cowgod's Chip-8 Technical Reference v1.0](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM)
-
 
 ## Licence
 
