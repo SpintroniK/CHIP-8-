@@ -29,7 +29,7 @@ public:
         memory.WriteChunk(fontSet, fontOffset);
 
         // Start timers
-        timersTask = std::jthread(&Cpu::TimersLoop, this);
+        timersTask = std::jthread(std::bind_front(&Cpu::TimersLoop, this));
     }
 
     ~Cpu()
@@ -76,7 +76,7 @@ public:
 
 private:
 
-    void TimersLoop(std::stop_token stopToken)
+    void TimersLoop(std::stop_token stopToken = {})
     {
         using namespace std::chrono;
         using namespace std::this_thread;
@@ -205,20 +205,21 @@ private:
             }
             case 6:
             {
-                V[0xF] = (V[x] & 0x01) ? 1 : 0;
+                const Register_t c = (V[x] & 0x01) ? 1 : 0;
                 V[x] = V[x] >> 1;
+                V[0xF] = c;
                 break;
             } 
             case 7:
             {
-                V[0xF] = (V[y] > V[x]) ? 1 : 0;
                 V[x] = V[y] - V[x];
+                V[0xF] = (V[y] > V[x]) ? 1 : 0;
                 break;
             }
             case 0xe:
             {
-                V[0xF] = (V[x] & 0x80) ? 1 : 0;
                 V[x] = V[x] << 1;
+                V[0xF] = (V[x] & 0x80) ? 1 : 0;
                 break;
             }
             default: break;
@@ -249,15 +250,12 @@ private:
 
     void Rnd(Instruction_t instruction)
     {
-        using random_bytes_engine = std::independent_bits_engine<std::mt19937, std::numeric_limits<Byte_t>::digits, Byte_t>;
-        random_bytes_engine r{};
-
-        using namespace std::chrono;
-        const auto ts = high_resolution_clock::now().time_since_epoch();
-        r.seed(static_cast<Byte_t>(duration_cast<microseconds>(ts).count() % 255));
+        std::random_device r{};
+        std::mt19937 generator{r()};
+        std::uniform_int_distribution<std::uint16_t> distrib{std::numeric_limits<Byte_t>::min(), std::numeric_limits<Byte_t>::max()};
 
         const auto x = GetNibble<1>(instruction);
-        V[x] = r() & GetLowestByte(instruction);
+        V[x] = static_cast<Byte_t>(distrib(generator)) & GetLowestByte(instruction);
     }
 
     void Drw(Instruction_t instruction)

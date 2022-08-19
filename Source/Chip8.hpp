@@ -25,7 +25,7 @@ public:
 
     void Start()
     {
-        mainTask = std::jthread(&Chip8::Loop, this);
+        mainTask = std::jthread(std::bind_front(&Chip8::Loop, this));
     }
 
     void Stop()
