@@ -76,7 +76,7 @@ public:
 
 private:
 
-    void TimersLoop(std::stop_token stopToken = {})
+    void TimersLoop(std::stop_token stopToken)
     {
         using namespace std::chrono;
         using namespace std::this_thread;

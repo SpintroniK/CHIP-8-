@@ -10,27 +10,27 @@ find_package(SFML COMPONENTS system window graphics audio REQUIRED)
 
 add_executable(chip8pp Source/main.cpp)
 
-target_compile_options(
-    chip8pp
-    PUBLIC
-    -std=c++20
-    # -Wall
-    -Werror
-    -Wextra
-    -Wshadow
-    -Wnon-virtual-dtor
-    -Wno-old-style-cast
-    -Wcast-align
-    # -Wunused
-    -Woverloaded-virtual
-    -Wpedantic
-    -Wconversion
-    -Wsign-conversion
-    -Wdouble-promotion
-    -Wformat=2
-    # -Wno-unused-variable
-    -Wno-ignored-attributes
-    -pedantic
+# target_compile_options(
+#     chip8pp
+#     PUBLIC
+#     -std=c++20
+#     # -Wall
+#     -Werror
+#     -Wextra
+#     -Wshadow
+#     -Wnon-virtual-dtor
+#     -Wno-old-style-cast
+#     -Wcast-align
+#     # -Wunused
+#     -Woverloaded-virtual
+#     -Wpedantic
+#     -Wconversion
+#     -Wsign-conversion
+#     -Wdouble-promotion
+#     -Wformat=2
+#     # -Wno-unused-variable
+#     -Wno-ignored-attributes
+#     -pedantic
 )
 
 target_link_libraries(chip8pp Threads::Threads sfml-graphics sfml-audio)

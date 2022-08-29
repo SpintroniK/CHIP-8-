@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     pixel.setFillColor(sf::Color(0xff, 0xff, 0xff));
 
 
-    sf::RenderWindow window{sf::VideoMode{width, height}, "CHIP-8-"};
+    sf::RenderWindow window{sf::VideoMode{width, height}, {}};
     window.setFramerateLimit(60);
 
     constexpr auto sampleRate = 44'100;
