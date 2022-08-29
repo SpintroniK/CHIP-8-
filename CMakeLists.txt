@@ -31,6 +31,6 @@ add_executable(chip8pp Source/main.cpp)
 #     # -Wno-unused-variable
 #     -Wno-ignored-attributes
 #     -pedantic
-)
+#)
 
 target_link_libraries(chip8pp Threads::Threads sfml-graphics sfml-audio)
