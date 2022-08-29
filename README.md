@@ -16,7 +16,7 @@ More precisely, it's an array of pointers to member functions.
 
 Rather than using the SFML main loop, which means that the speed of the CHIP-8 speed depends on the frame rate of the display, I made the CHIP-8 CPU run in a separate thread. This allows to configure the delay between each interrupt.
 
-Thanks to this multithreaded approach, it would be fairly easy to have caustom delay based on the instruction that is executed, as suggested by [Chip 8 Instruction Scheduling and Frequency](https://jackson-s.me/2019/07/13/Chip-8-Instruction-Scheduling-and-Frequency.html).
+Thanks to this multithreaded approach, it would be fairly easy to have custom delay based on the instruction that is executed, as suggested by [Chip 8 Instruction Scheduling and Frequency](https://jackson-s.me/2019/07/13/Chip-8-Instruction-Scheduling-and-Frequency.html).
 
 Timers also run in their own thread, which makes things a bit easier as well.
 
@@ -41,15 +41,15 @@ collision |= (prevScreenLine & ~screenline).any();
 Writing this interpreter was also an opportunity to get used to some C++20 features, such as the ones that are available in the `<bit>` header.
 I also make use of some other minor features and the ranges library.
 
-## How to use
-
-### Dependencies
+## Dependencies
 
 This project depends on [SFML](https://www.sfml-dev.org/).
 Make sure it is installed before you build the executable.
 The project uses `CMake`, so you will also have to install it to compile the code.
 
-### Build
+## Build
+
+### Linux
 
 Using CMake:
 
@@ -60,7 +60,31 @@ cmake ..
 make
 ```
 
-### Usage
+### Windows
+
+Configure the project using CMake GUI, or CMake Tools using vscode, for instance.
+Then you can build the executable using Visual Studio 2022, or vscode.
+
+### MacOS
+
+Install CMake, SFML, and gcc using brew.
+It should work with a recent version of clang, but it'll work with with gcc-12 for sure.
+Make sure the compiler that is going to be used is gcc:
+
+```bash
+export CXX=/usr/local/bin/g++-12
+```
+
+Then build the project using CMake:
+
+```bash
+mkdir build
+cd build
+cmake ..
+make
+```
+
+## Usage
 
 The executable takes one argument that indicates the path of a ROM, for instance:
 
@@ -70,7 +94,7 @@ The executable takes one argument that indicates the path of a ROM, for instance
 
 Please refer to next section to see where to find ROMs.
 
-### ROMs
+## ROMs
 
 There are many ways to find ROMs for the CHIP-8 interpreter, however, not all of the will work.
 The reason is that there are different specifications of the CHIP-8, such as SuperChip, CHIP-48, etc.
