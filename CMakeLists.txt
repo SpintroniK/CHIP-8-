@@ -6,9 +6,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 find_package(Threads REQUIRED)
-find_package(SFML COMPONENTS system window graphics audio REQUIRED)
+find_package(SDL2 REQUIRED)
+
 
 add_executable(chip8pp Source/main.cpp)
+
 
 # target_compile_options(
 #     chip8pp
@@ -33,4 +35,5 @@ add_executable(chip8pp Source/main.cpp)
 #     -pedantic
 #)
 
-target_link_libraries(chip8pp Threads::Threads sfml-graphics sfml-audio)
+include_directories(${SDL2_INCLUDE_DIR})
+target_link_libraries(chip8pp Threads::Threads SDL2)

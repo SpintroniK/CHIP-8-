@@ -3,8 +3,8 @@
 #include "Rom.hpp"
 #include "Sound.hpp"
 
-#include <SFML/Graphics.hpp>
-#include <SFML/Audio.hpp>
+
+#include <SDL2/SDL.h>
 
 #include <array>
 #include <chrono>
@@ -38,96 +38,124 @@ int main(int argc, char** argv)
 
     chip8.Start();
 
-    sf::RectangleShape pixel(sf::Vector2f(scale, scale));
-    pixel.setFillColor(sf::Color(0xff, 0xff, 0xff));
+    // sf::RectangleShape pixel(sf::Vector2f(scale, scale));
+    // pixel.setFillColor(sf::Color(0xff, 0xff, 0xff));
 
 
-    sf::RenderWindow window{sf::VideoMode{width, height}, {}};
-    window.setFramerateLimit(60);
+    // sf::RenderWindow window{sf::VideoMode{width, height}, {}};
+    // window.setFramerateLimit(60);
 
     constexpr auto sampleRate = 44'100;
     constexpr auto noteFreq = 440;
     const auto beep = Sound::GenerateSound<std::int16_t>(noteFreq, sampleRate);
 
-    sf::SoundBuffer soundBuffer;
-    if(!soundBuffer.loadFromSamples(beep.data(), sampleRate, 1, sampleRate)) 
-    {
-        return EXIT_FAILURE;
-    }
+    // sf::SoundBuffer soundBuffer;
+    // if(!soundBuffer.loadFromSamples(beep.data(), sampleRate, 1, sampleRate)) 
+    // {
+    //     return EXIT_FAILURE;
+    // }
 
-    sf::Sound sound;
-    sound.setBuffer(soundBuffer);
-    sound.setLoop(true);
+    // sf::Sound sound;
+    // sound.setBuffer(soundBuffer);
+    // sound.setLoop(true);
 
     bool isSoundPlaying = false;
 
-    while(window.isOpen())
-    {
-        // const auto start = high_resolution_clock::now();
-
-        sf::Event event;
-
-        while(window.pollEvent(event))
-        {
-
-            KeyArray currentKeys{};
-
-            switch(event.type)
-            {
-                case sf::Event::Closed:
-                {
-                    window.close(); 
-                    break;
-                }
-
-                case sf::Event::KeyPressed:
-                {
-                    if(event.key.code == sf::Keyboard::Escape) 
-                    {
-                        window.close();
-                    }
-
-                    // Handle KeyPad
-                    std::transform(KeyPad::keys.cbegin(), KeyPad::keys.cend(), currentKeys.begin(), [&] (const auto& k)
-                    {
-                        return k == event.key.code;
-                    });
-
-                    chip8.SetKeys(currentKeys);
-
-                    break;
-                }
-
-                case sf::Event::KeyReleased:
-                {
-                    std::transform(KeyPad::keys.begin(), KeyPad::keys.end(), currentKeys.begin(), currentKeys.begin(), [&](const auto& k, const auto& ck)
-                    {
-                        return ck & !(event.key.code == k);
-                    });
-
-                    chip8.SetKeys(currentKeys);
-
-                    break;
-                }
-
-                default: break;
-            }
-
-        }
-
-        if(!isSoundPlaying && chip8.GetPlaySound())
-        {
-            sound.play();
-            isSoundPlaying = true;
-        }
-
-        if(isSoundPlaying && !chip8.GetPlaySound())
-        {
-            sound.stop();
-            isSoundPlaying = false;
-        }
     
-        window.clear();
+
+    SDL_Init(SDL_INIT_EVERYTHING);
+    auto window = SDL_CreateWindow("Chip-8-", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0);
+    auto renderer = SDL_CreateRenderer(window, -1, 0);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    
+    const auto rect = SDL_Rect{10, 10, 20, 20};
+    SDL_RenderFillRect(renderer, &rect);
+    SDL_RenderPresent(renderer);
+
+
+    bool isWindowOpen = true;
+    while(isWindowOpen)
+    {
+        SDL_Event event;
+        while(SDL_PollEvent(&event))
+        {
+            switch (event.type)
+            {
+            case SDL_QUIT: isWindowOpen = false; break;
+            
+            default:
+                break;
+            }
+        }
+    }
+    //     // const auto start = high_resolution_clock::now();
+
+    //     sf::Event event;
+
+    //     while(window.pollEvent(event))
+    //     {
+
+    //         KeyArray currentKeys{};
+
+    //         switch(event.type)
+    //         {
+    //             case sf::Event::Closed:
+    //             {
+    //                 window.close(); 
+    //                 break;
+    //             }
+
+    //             case sf::Event::KeyPressed:
+    //             {
+    //                 if(event.key.code == sf::Keyboard::Escape) 
+    //                 {
+    //                     window.close();
+    //                 }
+
+    //                 // Handle KeyPad
+    //                 std::transform(KeyPad::keys.cbegin(), KeyPad::keys.cend(), currentKeys.begin(), [&] (const auto& k)
+    //                 {
+    //                     return k == event.key.code;
+    //                 });
+
+    //                 chip8.SetKeys(currentKeys);
+
+    //                 break;
+    //             }
+
+    //             case sf::Event::KeyReleased:
+    //             {
+    //                 std::transform(KeyPad::keys.begin(), KeyPad::keys.end(), currentKeys.begin(), currentKeys.begin(), [&](const auto& k, const auto& ck)
+    //                 {
+    //                     return ck & !(event.key.code == k);
+    //                 });
+
+    //                 chip8.SetKeys(currentKeys);
+
+    //                 break;
+    //             }
+
+    //             default: break;
+    //         }
+
+    //     }
+
+    //     if(!isSoundPlaying && chip8.GetPlaySound())
+    //     {
+    //         sound.play();
+    //         isSoundPlaying = true;
+    //     }
+
+    //     if(isSoundPlaying && !chip8.GetPlaySound())
+    //     {
+    //         sound.stop();
+    //         isSoundPlaying = false;
+    //     }
+    
+    //     window.clear();
 
         // Get screen data
         const auto pixels = chip8.GetScreen().GetPixels();
@@ -138,19 +166,24 @@ int main(int argc, char** argv)
             {
                 if(pixels[i][screenWidth - 1 - j])
                 {
-                    pixel.setPosition(static_cast<float>(scale * j), static_cast<float>(scale * i));
-                    window.draw(pixel);
+                    // pixel.setPosition(static_cast<float>(scale * j), static_cast<float>(scale * i));
+                    // window.draw(pixel);
                 }
             }
         }
 
-        window.display();
+        // window.display();
 
         // const auto delta = high_resolution_clock::now() - start;
         // std::cout << microseconds::period::den / duration_cast<microseconds>(delta).count() << " fps" << std::endl;
-    }
+    // }
 
     chip8.Stop();
+
+    SDL_DestroyWindow(window);
+     
+    // close SDL
+    SDL_Quit();
 
     return EXIT_SUCCESS;
 }
