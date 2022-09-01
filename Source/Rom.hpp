@@ -29,6 +29,8 @@ public:
         // Read file into string
         const std::string str{(std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>()};
         
+        std::cout << "Rom size = " << str.length() << std::endl;
+        
         // Copy string into data array
         std::copy(str.cbegin(), str.cend(), data.begin());
     }

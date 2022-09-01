@@ -34,7 +34,7 @@ public:
 
     ~Cpu()
     {
-        // timersTask.request_stop();
+        stopToken.store(true);
         timersTask.join();
     }
 
@@ -90,10 +90,10 @@ private:
             soundTimer.Dec();
             // std::cout << +delayTimer.Count() << std::endl;
 
-            // if(stopToken.stop_requested())
-            // {
-            //     return;
-            // }
+            if(stopToken.load())
+            {
+                return;
+            }
         }
 
     }
@@ -314,7 +314,7 @@ private:
 
                 // if(it == k.cend())
                 {
-                    pc -= 2;
+                    //pc -= 2;
                     return;
                 }
 
@@ -404,6 +404,7 @@ private:
     bool cls{false};
 
     std::thread timersTask;
+    std::atomic<bool> stopToken{false};
 
     mutable std::mutex keysMutex;
     mutable std::mutex screenMutex;

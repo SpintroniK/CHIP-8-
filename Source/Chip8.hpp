@@ -30,7 +30,7 @@ public:
 
     void Stop()
     {
-        // mainTask.request_stop();
+        stopToken.store(true);
 
         if(mainTask.joinable())
         {
@@ -66,13 +66,14 @@ private:
             cpu.Step();
             sleep_for(1429us);  // ~700 instructions / second
 
-            // if(stopToken.stop_requested())
-            // {
-            //     return;
-            // }
+            if(stopToken.load())
+            {
+                return;
+            }
         }
     }
 
     Cpu cpu;
     std::thread mainTask;
+    std::atomic<bool> stopToken{false};
 };

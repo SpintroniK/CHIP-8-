@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 
     // Create Rom
     Rom rom;
-    rom.LoadFromFile("ibm.ch8");
+    rom.LoadFromFile("roms/ibm.ch8");
 
     Chip8 chip8;
     chip8.LoadRom(rom);
@@ -65,15 +65,8 @@ int main(int argc, char** argv)
 
     SDL_Init(SDL_INIT_EVERYTHING);
     auto window = SDL_CreateWindow("Chip-8-", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0);
-    auto renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
+    auto renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
 
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    
-    const auto rect = SDL_Rect{10, 10, 20, 20};
-    SDL_RenderFillRect(renderer, &rect);
-    SDL_RenderPresent(renderer);
 
 
     bool isWindowOpen = true;
@@ -113,7 +106,7 @@ int main(int argc, char** argv)
                     // pixel.setPosition(static_cast<float>(scale * j), static_cast<float>(scale * i));
                     // window.draw(pixel);
                     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-                    const auto rect = SDL_Rect{scale * j, scale * i, scale, scale};
+                    const auto rect = SDL_Rect{static_cast<int>(scale * j), static_cast<int>(scale * i), scale, scale};
                     SDL_RenderFillRect(renderer, &rect);
                 }
             }
