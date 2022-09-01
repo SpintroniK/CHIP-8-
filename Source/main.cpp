@@ -69,6 +69,13 @@ int main(int argc, char** argv)
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    
+    const auto rect = SDL_Rect{10, 10, 20, 20};
+    SDL_RenderFillRect(renderer, &rect);
+    SDL_RenderPresent(renderer);
+
+
     bool isWindowOpen = true;
     while(isWindowOpen)
     {
