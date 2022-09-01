@@ -25,12 +25,12 @@ public:
 
     void Start()
     {
-        mainTask = std::jthread(std::bind_front(&Chip8::Loop, this));
+        mainTask = std::thread(std::bind_front(&Chip8::Loop, this));
     }
 
     void Stop()
     {
-        mainTask.request_stop();
+        // mainTask.request_stop();
 
         if(mainTask.joinable())
         {
@@ -38,10 +38,10 @@ public:
         }
     }
 
-    auto SetKeys(const KeyArray& k)
-    {
-        cpu.SetKeys(k);
-    }
+    // auto SetKeys(const KeyArray& k)
+    // {
+    //     cpu.SetKeys(k);
+    // }
 
     auto GetScreen() const
     {
@@ -56,7 +56,7 @@ public:
 
 private:
 
-    void Loop(std::stop_token stopToken)
+    void Loop()
     {
         using namespace std::chrono_literals;
         using namespace std::this_thread;
@@ -66,13 +66,13 @@ private:
             cpu.Step();
             sleep_for(1429us);  // ~700 instructions / second
 
-            if(stopToken.stop_requested())
-            {
-                return;
-            }
+            // if(stopToken.stop_requested())
+            // {
+            //     return;
+            // }
         }
     }
 
     Cpu cpu;
-    std::jthread mainTask;
+    std::thread mainTask;
 };

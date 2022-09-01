@@ -35,5 +35,6 @@ add_executable(chip8pp Source/main.cpp)
 #     -pedantic
 #)
 
+# target_compile_options(chip8pp PUBLIC -s USE_SDL=2)
 include_directories(${SDL2_INCLUDE_DIR})
 target_link_libraries(chip8pp Threads::Threads SDL2)

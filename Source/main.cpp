@@ -20,10 +20,10 @@ int main(int argc, char** argv)
 
     const std::vector<std::string> args(argv, argv + argc);
 
-    if(args.size() < 2)
-    {
-        return EXIT_SUCCESS;
-    }
+    // if(args.size() < 2)
+    // {
+    //     return EXIT_SUCCESS;
+    // }
 
     constexpr auto scale = 16;
     constexpr auto width = 64U * scale;
@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 
     // Create Rom
     Rom rom;
-    rom.LoadFromFile(args[1]);
+    rom.LoadFromFile("ibm.ch8");
 
     Chip8 chip8;
     chip8.LoadRom(rom);
@@ -71,7 +71,7 @@ int main(int argc, char** argv)
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     
-    const auto rect = SDL_Rect{10, 10, 20, 20};
+    const auto rect = SDL_Rect{10, 10, 50, 50};
     SDL_RenderFillRect(renderer, &rect);
     SDL_RenderPresent(renderer);
 

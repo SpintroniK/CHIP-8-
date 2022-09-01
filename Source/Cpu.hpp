@@ -29,12 +29,12 @@ public:
         memory.WriteChunk(fontSet, fontOffset);
 
         // Start timers
-        timersTask = std::jthread(std::bind_front(&Cpu::TimersLoop, this));
+        timersTask = std::thread(std::bind_front(&Cpu::TimersLoop, this));
     }
 
     ~Cpu()
     {
-        timersTask.request_stop();
+        // timersTask.request_stop();
         timersTask.join();
     }
 
@@ -57,11 +57,11 @@ public:
         LoadToMemory(data, programLoadAddress);
     }
 
-    void SetKeys(const KeyArray& k)
-    {
-        std::lock_guard<std::mutex> lock(keysMutex);
-        keys = k;
-    }
+    // void SetKeys(const KeyArray& k)
+    // {
+    //     std::lock_guard<std::mutex> lock(keysMutex);
+    //     keys = k;
+    // }
 
     auto GetScreen() const 
     {
@@ -76,7 +76,7 @@ public:
 
 private:
 
-    void TimersLoop(std::stop_token stopToken)
+    void TimersLoop()
     {
         using namespace std::chrono;
         using namespace std::this_thread;
@@ -90,19 +90,19 @@ private:
             soundTimer.Dec();
             // std::cout << +delayTimer.Count() << std::endl;
 
-            if(stopToken.stop_requested())
-            {
-                return;
-            }
+            // if(stopToken.stop_requested())
+            // {
+            //     return;
+            // }
         }
 
     }
 
-    auto GetKeys() const
-    {
-        std::lock_guard<std::mutex> lock(keysMutex);
-        return keys;
-    }
+    // auto GetKeys() const
+    // {
+    //     std::lock_guard<std::mutex> lock(keysMutex);
+    //     return keys;
+    // }
 
     template <typename T>
     void LoadToMemory(const T& data, Address_t address)
@@ -281,7 +281,7 @@ private:
     {
         const auto x = GetNibble<1>(instruction);
         const auto kk = GetLowestByte(instruction);
-        const auto isPressed = GetKeys()[V[x]];
+        const auto isPressed = true; //GetKeys()[V[x]];
 
         if(kk == 0x9E)
         {
@@ -309,16 +309,16 @@ private:
             case 0x07: V[x] = delayTimer.Count(); break;
             case 0x0A:
             {
-                const auto k = GetKeys();
-                const auto it = std::find(k.begin(), k.end(), true);
+                const auto k = true; //GetKeys();
+                // const auto it = std::find(k.begin(), k.end(), true);
 
-                if(it == k.cend())
+                // if(it == k.cend())
                 {
                     pc -= 2;
                     return;
                 }
 
-                V[x] = static_cast<Byte_t>(std::distance(k.cbegin(), it));
+                // V[x] = static_cast<Byte_t>(std::distance(k.cbegin(), it));
 
                 break;
             }
@@ -392,7 +392,7 @@ private:
     };
 
     Screen screen;
-    KeyArray keys{};
+    // KeyArray keys{};
     Timer<Byte_t> delayTimer;
     Timer<Byte_t> soundTimer;
     std::array<Address_t, stackSize> stack{};
@@ -403,7 +403,7 @@ private:
     Byte_t sp{};
     bool cls{false};
 
-    std::jthread timersTask;
+    std::thread timersTask;
 
     mutable std::mutex keysMutex;
     mutable std::mutex screenMutex;

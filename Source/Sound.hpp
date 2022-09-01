@@ -21,14 +21,14 @@ namespace Sound
 
         const auto amplitude = static_cast<double>(std::numeric_limits<T>::max());
 
-        const auto v = std::views::iota(0) 
-                    | std::views::take(sampleRate)
-                    | std::views::transform([&] (const auto& x) { return radiansPerSample * x; })
-                    | std::views::transform([] (const auto& x) { return std::sin(x); })
-                    | std::views::transform([&] (const auto& x) { return amplitude * x; })
-                    | std::views::common;
+        // const auto v = std::views::iota(0) 
+        //             | std::views::take(sampleRate)
+        //             | std::views::transform([&] (const auto& x) { return radiansPerSample * x; })
+        //             | std::views::transform([] (const auto& x) { return std::sin(x); })
+        //             | std::views::transform([&] (const auto& x) { return amplitude * x; })
+        //             | std::views::common;
 
-        return std::vector<std::int16_t>(v.begin(), v.end());
+        return std::vector<std::int16_t>(sampleRate);
     }
 
 } // namespace Sound
