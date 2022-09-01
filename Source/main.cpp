@@ -65,16 +65,9 @@ int main(int argc, char** argv)
 
     SDL_Init(SDL_INIT_EVERYTHING);
     auto window = SDL_CreateWindow("Chip-8-", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0);
-    auto renderer = SDL_CreateRenderer(window, -1, 0);
+    auto renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    
-    const auto rect = SDL_Rect{10, 10, 20, 20};
-    SDL_RenderFillRect(renderer, &rect);
-    SDL_RenderPresent(renderer);
-
 
     bool isWindowOpen = true;
     while(isWindowOpen)
@@ -85,11 +78,40 @@ int main(int argc, char** argv)
             switch (event.type)
             {
             case SDL_QUIT: isWindowOpen = false; break;
+            case SDL_KEYUP: 
+            {
+                const auto key = event.key.keysym.sym;
+                switch(key)
+                {
+                    case SDL_KeyCode::SDLK_ESCAPE : isWindowOpen = false; break;
+                }
+            }
             
             default:
                 break;
             }
         }
+
+
+        // Get screen data
+        const auto pixels = chip8.GetScreen().GetPixels();
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+        for(std::size_t i = 0; i < screenHeight; i++) 
+        {
+            for(std::size_t j = 0; j < screenWidth; j++) 
+            {
+                if(pixels[i][screenWidth - 1 - j])
+                {
+                    // pixel.setPosition(static_cast<float>(scale * j), static_cast<float>(scale * i));
+                    // window.draw(pixel);
+                    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+                    const auto rect = SDL_Rect{scale * j, scale * i, scale, scale};
+                    SDL_RenderFillRect(renderer, &rect);
+                }
+            }
+        }
+        SDL_RenderPresent(renderer);
     }
     //     // const auto start = high_resolution_clock::now();
 
@@ -157,20 +179,6 @@ int main(int argc, char** argv)
     
     //     window.clear();
 
-        // Get screen data
-        const auto pixels = chip8.GetScreen().GetPixels();
-
-        for(std::size_t i = 0; i < screenHeight; i++) 
-        {
-            for(std::size_t j = 0; j < screenWidth; j++) 
-            {
-                if(pixels[i][screenWidth - 1 - j])
-                {
-                    // pixel.setPosition(static_cast<float>(scale * j), static_cast<float>(scale * i));
-                    // window.draw(pixel);
-                }
-            }
-        }
 
         // window.display();
 
