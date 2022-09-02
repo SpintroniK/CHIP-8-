@@ -38,10 +38,10 @@ public:
         }
     }
 
-    // auto SetKeys(const KeyArray& k)
-    // {
-    //     cpu.SetKeys(k);
-    // }
+    auto SetKeys(const KeyArray& k)
+    {
+        cpu.SetKeys(k);
+    }
 
     auto GetScreen() const
     {
@@ -64,7 +64,7 @@ private:
         for(;;)
         {
             cpu.Step();
-            sleep_for(1429us);  // ~700 instructions / second
+            sleep_for(2000us);  // ~500 instructions / second
 
             if(stopToken.load())
             {

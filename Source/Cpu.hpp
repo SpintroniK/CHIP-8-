@@ -57,11 +57,11 @@ public:
         LoadToMemory(data, programLoadAddress);
     }
 
-    // void SetKeys(const KeyArray& k)
-    // {
-    //     std::lock_guard<std::mutex> lock(keysMutex);
-    //     keys = k;
-    // }
+    void SetKeys(const KeyArray& k)
+    {
+        std::lock_guard<std::mutex> lock(keysMutex);
+        keys = k;
+    }
 
     auto GetScreen() const 
     {
@@ -98,11 +98,11 @@ private:
 
     }
 
-    // auto GetKeys() const
-    // {
-    //     std::lock_guard<std::mutex> lock(keysMutex);
-    //     return keys;
-    // }
+    auto GetKeys() const
+    {
+        std::lock_guard<std::mutex> lock(keysMutex);
+        return keys;
+    }
 
     template <typename T>
     void LoadToMemory(const T& data, Address_t address)
@@ -281,7 +281,7 @@ private:
     {
         const auto x = GetNibble<1>(instruction);
         const auto kk = GetLowestByte(instruction);
-        const auto isPressed = true; //GetKeys()[V[x]];
+        const auto isPressed = GetKeys()[V[x]];
 
         if(kk == 0x9E)
         {
@@ -309,16 +309,16 @@ private:
             case 0x07: V[x] = delayTimer.Count(); break;
             case 0x0A:
             {
-                const auto k = true; //GetKeys();
-                // const auto it = std::find(k.begin(), k.end(), true);
+                const auto k = GetKeys();
+                const auto it = std::find(k.begin(), k.end(), true);
 
-                // if(it == k.cend())
+                if(it == k.cend())
                 {
-                    //pc -= 2;
+                    pc -= 2;
                     return;
                 }
 
-                // V[x] = static_cast<Byte_t>(std::distance(k.cbegin(), it));
+                V[x] = static_cast<Byte_t>(std::distance(k.cbegin(), it));
 
                 break;
             }
@@ -392,7 +392,7 @@ private:
     };
 
     Screen screen;
-    // KeyArray keys{};
+    KeyArray keys{};
     Timer<Byte_t> delayTimer;
     Timer<Byte_t> soundTimer;
     std::array<Address_t, stackSize> stack{};
