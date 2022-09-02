@@ -68,7 +68,6 @@ int main(int argc, char** argv)
     auto renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
 
 
-
     bool isWindowOpen = true;
     while(isWindowOpen)
     {

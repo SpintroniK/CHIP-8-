@@ -11,30 +11,15 @@ find_package(SDL2 REQUIRED)
 
 add_executable(chip8pp Source/main.cpp)
 
+set(CMAKE_VERBOSE_MAKEFILE OFF)
 
-# target_compile_options(
-#     chip8pp
-#     PUBLIC
-#     -std=c++20
-#     # -Wall
-#     -Werror
-#     -Wextra
-#     -Wshadow
-#     -Wnon-virtual-dtor
-#     -Wno-old-style-cast
-#     -Wcast-align
-#     # -Wunused
-#     -Woverloaded-virtual
-#     -Wpedantic
-#     -Wconversion
-#     -Wsign-conversion
-#     -Wdouble-promotion
-#     -Wformat=2
-#     # -Wno-unused-variable
-#     -Wno-ignored-attributes
-#     -pedantic
-#)
+if(EMSCRIPTEN)
+    message("Compiling with emsdk.")
+	set(CMAKE_EXECUTABLE_SUFFIX ".js")
+    set_target_properties(chip8pp PROPERTIES LINK_FLAGS "-sUSE_SDL=2 -sDISABLE_EXCEPTION_CATCHING=1 -sPROXY_TO_PTHREAD -sUSE_PTHREADS -sTOTAL_MEMORY=32MB -O3 -sENVIRONMENT=\"web,worker\" --embed-file roms --closure 1 -fno-rtti -flto")
+    target_compile_options(chip8pp PUBLIC "-pthread")
+else()
+    target_link_libraries(chip8pp Threads::Threads SDL2)
+endif()
 
-# target_compile_options(chip8pp PUBLIC -s USE_SDL=2)
 include_directories(${SDL2_INCLUDE_DIR})
-target_link_libraries(chip8pp Threads::Threads SDL2)
