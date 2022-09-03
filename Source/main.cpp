@@ -6,7 +6,7 @@
 
 #include <SDL2/SDL.h>
 
-#ifdef __EMSCRIPTEN__
+#if defined( __EMSCRIPTEN__)
 #include <emscripten.h>
 #endif
 
@@ -110,14 +110,15 @@ int main(int argc, char** argv)
 
     const std::vector<std::string> args(argv, argv + argc);
 
-    // if(args.size() < 2)
-    // {
-    //     return EXIT_SUCCESS;
-    // }
+    if(args.size() < 2)
+    {
+        return EXIT_SUCCESS;
+    }
 
     // Create Rom
     Rom rom;
-    rom.LoadFromFile("roms/BRIX");
+    // rom.LoadFromFile(args[1]);
+    rom.LoadFromData(args[1]);
 
     chip8.LoadRom(rom);
 
@@ -143,8 +144,10 @@ int main(int argc, char** argv)
     window = SDL_CreateWindow("Chip-8-", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
 
-    #ifdef __EMSCRIPTEN__
+    #if defined(__EMSCRIPTEN__)
         emscripten_set_main_loop(mainLoop, 0, true);
+    #else
+        while(isWindowOpen) mainLoop();
     #endif
 
     //     // const auto start = high_resolution_clock::now();
