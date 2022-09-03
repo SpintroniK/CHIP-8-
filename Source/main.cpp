@@ -62,10 +62,11 @@ void mainLoop()
             }
             case SDL_KEYUP: 
             {
-                const auto key = event.key.keysym.sym;
+                const auto key = event.key.keysym.scancode;
                 switch(key)
                 {
-                    case SDL_KeyCode::SDLK_ESCAPE : isWindowOpen = false; break;
+                    case SDL_Scancode::SDL_SCANCODE_ESCAPE : isWindowOpen = false; break;
+                    default: break;
                 }
 
                 std::transform(KeyPad::keys.begin(), KeyPad::keys.end(), currentKeys.begin(), currentKeys.begin(), [&](const auto& k, const auto& ck)
@@ -103,6 +104,7 @@ void mainLoop()
         }
         SDL_RenderPresent(renderer);
     }
+
 }
 
 int main(int argc, char** argv)
@@ -124,10 +126,6 @@ int main(int argc, char** argv)
 
     chip8.Start();
 
-    // constexpr auto sampleRate = 44'100;
-    // constexpr auto noteFreq = 440;
-    // const auto beep = Sound::GenerateSound<std::int16_t>(noteFreq, sampleRate);
-
     // sf::SoundBuffer soundBuffer;
     // if(!soundBuffer.loadFromSamples(beep.data(), sampleRate, 1, sampleRate)) 
     // {
@@ -143,6 +141,22 @@ int main(int argc, char** argv)
     SDL_Init(SDL_INIT_EVERYTHING);
     window = SDL_CreateWindow("Chip-8-", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+
+    constexpr auto sampleRate = 44'100;
+    constexpr auto noteFreq = 440;
+    const auto audioSpecs = SDL_AudioSpec{  .freq = sampleRate,
+                                            .format = AUDIO_S16,
+                                            .channels = 2,
+                                            .samples = sampleRate,
+                                            .callback = nullptr};
+
+    auto audioDevice = SDL_OpenAudioDevice(nullptr, 0, &audioSpecs, nullptr, SDL_AUDIO_ALLOW_ANY_CHANGE);
+
+    const auto beep = Sound::GenerateSound<std::int16_t>(noteFreq, sampleRate);
+
+    SDL_QueueAudio(audioDevice, beep.data(), beep.size());
+
+    SDL_PauseAudioDevice(audioDevice, 0);
 
     #if defined(__EMSCRIPTEN__)
         emscripten_set_main_loop(mainLoop, 0, true);
