@@ -15,7 +15,7 @@ namespace Sound
 
         using namespace std::numbers;
 
-        // std::vector<T> soundData(sampleRate);
+        std::vector<T> soundData(sampleRate);
 
         const auto radiansPerSample = freq * 2 * pi / static_cast<double>(sampleRate);
 
@@ -28,7 +28,12 @@ namespace Sound
         //             | std::views::transform([&] (const auto& x) { return amplitude * x; })
         //             | std::views::common;
 
-        return std::vector<std::int16_t>(sampleRate);
+        for(std::size_t i = 0; i < soundData.size(); ++i)
+        {
+            soundData[i] = amplitude * std::sin(radiansPerSample * i);
+        }
+
+        return soundData;
     }
 
 } // namespace Sound
