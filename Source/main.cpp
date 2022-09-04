@@ -14,6 +14,7 @@
 #include <array>
 #include <chrono>
 #include <iostream>
+#include <numbers>
 #include <numeric>
 #include <string>
 #include <vector>
@@ -24,90 +25,82 @@ inline constexpr auto scale = 16;
 inline constexpr auto width = 64U * scale;
 inline constexpr auto height = 32U * scale;
 
+
+constexpr auto sampleRate = 44'100;
+constexpr auto noteFreq = 110;
+
 static Chip8 chip8;
 static SDL_Window* window = nullptr;
 static SDL_Renderer* renderer = nullptr;
 
 static bool isWindowOpen = true;
-int gain = 0;
+static double gain = 0.;
+static double phase = 0.;
+static bool isSoundPlaying{false};
 
-void audiomixer(void *userdata, Uint8 *stream, int len)
+void audiomixer(void* userdata, Uint8* stream, int len)
 {
+    using namespace std::numbers;
     int samples = len / 4;
-    short *buf = (short*)stream;
+    short* buf = reinterpret_cast<short*>(stream);
 
-    int i;
-    for (i = 0; i < samples*2; i++)
+    const auto radiansPerSample = noteFreq * pi / static_cast<double>(sampleRate);
+    
+    for(std::size_t i = 0; i < samples * 2; ++i)
     {
-        buf[i] = std::sin(i / 50) * gain;
+        phase += radiansPerSample;
+        buf[i] = static_cast<short>(std::sin(phase) * gain);
     }
 }
 
-int sdlstatic_init(unsigned int aSamplerate, unsigned int aBuffer)
+void initAudio()
 {
     SDL_AudioSpec as;
-    as.freq = aSamplerate;
+    as.freq = sampleRate;
     as.format = AUDIO_S16;
     as.channels = 2;
-    as.samples = aBuffer;
-    as.callback = nullptr;
+    as.samples = 2048;
+    as.callback = audiomixer;
 
     SDL_AudioSpec as2;
-    if (SDL_OpenAudio(&as, &as2) < 0)
+    if(SDL_OpenAudio(&as, &as2) < 0)
     {
-        return -1;
+        return;
     }
 
     SDL_PauseAudio(0);
 
-    return 0;
+    return;
 }   
 
 void pauseAudio()
 {
+    gain = 0.;
 }
 
-void resumeAudio()
+void playAudio()
 {
-    const auto beep = Sound::GenerateSound<std::int16_t>(440, 44100);
-
-    SDL_QueueAudio(1, beep.data(), beep.size());
+    gain = static_cast<double>(std::numeric_limits<std::int16_t>::max()) / 8;
 }
 
-void inter()
-{
-    
-    sdlstatic_init(44100, 1024);
-
-    // Poll for events, and handle the ones we care about.
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) 
-    {
-        switch (event.type) 
-        {
-        case SDL_KEYUP:
-            // If escape is pressed, return (and thus, quit)
-            switch (event.key.keysym.sym)
-            {
-            case SDLK_ESCAPE:
-                {
-                    exit(0);
-                }
-                break;
-            }
-            break;
-        case SDL_QUIT:
-            SDL_CloseAudio();
-            exit(0);
-        }
-    }
-}
 
 void mainLoop()
 {
 
     if(isWindowOpen)
     {
+        if(!isSoundPlaying && chip8.GetPlaySound())
+        {
+            playAudio();
+            isSoundPlaying = true;
+        }
+
+        if(isSoundPlaying && !chip8.GetPlaySound())
+        {
+            pauseAudio();
+            isSoundPlaying = false;
+        }
+
         SDL_Event event;
         while(SDL_PollEvent(&event))
         {
@@ -130,8 +123,6 @@ void mainLoop()
                     return k == event.key.keysym.scancode;
                 });
 
-        // emscripten_async_run_in_main_runtime_thread(EM_FUNC_SIG_V, resumeAudio);
-                resumeAudio();
                 chip8.SetKeys(currentKeys);
                 break;
             }
@@ -149,8 +140,7 @@ void mainLoop()
                     return ck & !(key == k);
                 });
 
-        // emscripten_async_run_in_main_runtime_thread(EM_FUNC_SIG_V, pauseAudio);
-                pauseAudio();
+
                 chip8.SetKeys(currentKeys);
                 break;
             }
@@ -159,8 +149,6 @@ void mainLoop()
                 break;
             }
         }
-
-
         // Get screen data
         const auto pixels = chip8.GetScreen().GetPixels();
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -180,6 +168,7 @@ void mainLoop()
             }
         }
         SDL_RenderPresent(renderer);
+
     }
 
 }
@@ -197,71 +186,28 @@ int main(int argc, char** argv)
 
     // Create Rom
     Rom rom;
-    // rom.LoadFromFile(args[1]);
-    rom.LoadFromData(args[1]);
+
+    #if defined(__EMSCRIPTEN__)
+        rom.LoadFromData(args[1]);
+    #else
+        rom.LoadFromFile(args[1]);
+    #endif
 
     chip8.LoadRom(rom);
 
     chip8.Start();
 
-    // sf::SoundBuffer soundBuffer;
-    // if(!soundBuffer.loadFromSamples(beep.data(), sampleRate, 1, sampleRate)) 
-    // {
-    //     return EXIT_FAILURE;
-    // }
-
-    // sf::Sound sound;
-    // sound.setBuffer(soundBuffer);
-    // sound.setLoop(true);
-
-    // bool isSoundPlaying = false;
-
     SDL_Init(SDL_INIT_EVERYTHING);
     window = SDL_CreateWindow("Chip-8-", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
 
-    // constexpr auto sampleRate = 44'100;
-    // constexpr auto noteFreq = 440;
-    // const auto audioSpecs = SDL_AudioSpec{  .freq = sampleRate,
-    //                                         .format = AUDIO_S16,
-    //                                         .channels = 2,
-    //                                         .samples = sampleRate,
-    //                                         .callback = nullptr};
-
-    // auto audioDevice = SDL_OpenAudioDevice(nullptr, 0, &audioSpecs, nullptr, SDL_AUDIO_ALLOW_ANY_CHANGE);
-
-    // const auto beep = Sound::GenerateSound<std::int16_t>(noteFreq, sampleRate);
-
-    // SDL_QueueAudio(audioDevice, beep.data(), beep.size());
-
-    // SDL_PauseAudioDevice(audioDevice, 0);
-
     #if defined(__EMSCRIPTEN__)
-        // emscripten_async_run_in_main_runtime_thread(EM_FUNC_SIG_V, inter);
+        emscripten_async_run_in_main_runtime_thread(EM_FUNC_SIG_V, initAudio);
         emscripten_set_main_loop(mainLoop, 0, true);
     #else
+        initAudio();
         while(isWindowOpen) mainLoop();
     #endif
-
-    //     // const auto start = high_resolution_clock::now();
-
-
-    //     if(!isSoundPlaying && chip8.GetPlaySound())
-    //     {
-    //         sound.play();
-    //         isSoundPlaying = true;
-    //     }
-
-    //     if(isSoundPlaying && !chip8.GetPlaySound())
-    //     {
-    //         sound.stop();
-    //         isSoundPlaying = false;
-    //     }
-
-
-        // const auto delta = high_resolution_clock::now() - start;
-        // std::cout << microseconds::period::den / duration_cast<microseconds>(delta).count() << " fps" << std::endl;
-    // }
 
     chip8.Stop();
 
