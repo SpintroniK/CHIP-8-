@@ -8,6 +8,7 @@
 
 #if defined( __EMSCRIPTEN__)
 #include <emscripten.h>
+#include <emscripten/html5.h>
 #include <emscripten/threading.h>
 #endif
 
@@ -26,40 +27,50 @@ inline constexpr auto width = 64U * scale;
 inline constexpr auto height = 32U * scale;
 
 
-constexpr auto sampleRate = 44'100;
-constexpr auto noteFreq = 110;
+inline constexpr auto sampleRate = 44'100;
+inline constexpr auto noteFreq = 440;
 
 static Chip8 chip8;
 static SDL_Window* window = nullptr;
 static SDL_Renderer* renderer = nullptr;
 
 static bool isWindowOpen = true;
-static double gain = 0.;
+static std::chrono::microseconds soundTimerDt{0};
 static double phase = 0.;
-static bool isSoundPlaying{false};
 
 void audiomixer(void* userdata, Uint8* stream, int len)
 {
     using namespace std::numbers;
-    int samples = len / 4;
-    short* buf = reinterpret_cast<short*>(stream);
+    int samples = len / 8;
+    float* buf = reinterpret_cast<float*>(stream);
 
     const auto radiansPerSample = noteFreq * pi / static_cast<double>(sampleRate);
-    
+
     for(std::size_t i = 0; i < samples * 2; ++i)
     {
+
+        if(soundTimerDt <= 0us)
+        {
+            phase = 0.;
+            buf[i] = 0;
+            continue;
+        }
+        
         phase += radiansPerSample;
-        buf[i] = static_cast<short>(std::sin(phase) * gain);
+        const auto gain = static_cast<double>(std::numeric_limits<std::int16_t>::max()) / 8;
+        buf[i] = std::sin(phase);
     }
+
+    soundTimerDt -= microseconds{ microseconds::period::den * samples / sampleRate };
 }
 
 void initAudio()
 {
     SDL_AudioSpec as;
     as.freq = sampleRate;
-    as.format = AUDIO_S16;
+    as.format = AUDIO_F32LSB; // AUDIO_F32LSB
     as.channels = 2;
-    as.samples = 2048;
+    as.samples = 256;
     as.callback = audiomixer;
 
     SDL_AudioSpec as2;
@@ -73,32 +84,23 @@ void initAudio()
     return;
 }   
 
-void pauseAudio()
+void playAudio(const std::chrono::microseconds& dt)
 {
-    gain = 0.;
-}
-
-void playAudio()
-{
-    gain = static_cast<double>(std::numeric_limits<std::int16_t>::max()) / 8;
+    soundTimerDt = dt;
 }
 
 
 void mainLoop()
 {
+    using namespace std::chrono;
 
     if(isWindowOpen)
     {
-        if(!isSoundPlaying && chip8.GetPlaySound())
+        if(chip8.GetPlaySound())
         {
-            playAudio();
-            isSoundPlaying = true;
-        }
-
-        if(isSoundPlaying && !chip8.GetPlaySound())
-        {
-            pauseAudio();
-            isSoundPlaying = false;
+            const auto duration_us = double{microseconds::period::den} * static_cast<double>(chip8.GetSoundTimer()) / 60.;
+            const auto soundDuration = microseconds{static_cast<std::size_t>(duration_us)};
+            playAudio(soundDuration);
         }
 
         SDL_Event event;

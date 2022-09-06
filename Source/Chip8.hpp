@@ -52,6 +52,11 @@ public:
     {
         return cpu.GetSoundTimer() > 0;
     }
+
+    auto GetSoundTimer() const
+    {
+        return cpu.GetSoundTimer();
+    }
     
 
 private:

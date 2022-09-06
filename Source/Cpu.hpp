@@ -323,7 +323,7 @@ private:
                 break;
             }
             case 0x15: delayTimer.Set(V[x]); break;
-            case 0x18: soundTimer.Set(V[x]); break;
+            case 0x18: soundTimer.Set(V[x] + 1); break;
             case 0x1E: I += V[x]; break;
             case 0x29: I = V[x] * Address_t{5}; break;
             case 0x33: 
