@@ -187,9 +187,9 @@ private:
         switch(n)
         {
             case 0: V[x] = V[y]; break; // Stores the value of register Vy in register Vx.
-            case 1: V[x] = V[x] | V[y]; break; // OR
-            case 2: V[x] = V[x] & V[y]; break; // AND
-            case 3: V[x] = V[x] ^ V[y]; break; // XOR
+            case 1: V[x] = V[x] | V[y]; V[0xF] = 0; break; // OR
+            case 2: V[x] = V[x] & V[y]; V[0xF] = 0; break; // AND
+            case 3: V[x] = V[x] ^ V[y]; V[0xF] = 0; break; // XOR
             case 4: 
             {
                 const auto s = V[x] + V[y];
@@ -205,6 +205,7 @@ private:
             }
             case 6:
             {
+                V[x] = V[y];
                 const Register_t c = (V[x] & 0x01) ? 1 : 0;
                 V[x] = V[x] >> 1;
                 V[0xF] = c;
@@ -218,6 +219,7 @@ private:
             }
             case 0xe:
             {
+                V[x] = V[y];
                 V[x] = V[x] << 1;
                 V[0xF] = (V[x] & 0x80) ? 1 : 0;
                 break;
